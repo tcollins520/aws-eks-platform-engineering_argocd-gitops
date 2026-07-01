@@ -1,0 +1,146 @@
+replicaCount: 2
+
+image:
+  repository: stacksimplify/kube-usermanagement-microservice
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: usermgmt
+
+service:
+  type: ClusterIP
+  port: 8095
+  targetPort: 8095
+# ----------------------------------------------------------------------------
+# HEALTH PROBES
+# ----------------------------------------------------------------------------
+probes:
+  readiness:
+    path: /usermgmt/health-status
+    port: 8095
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  liveness:
+    path: /usermgmt/health-status
+    port: 8095
+    initialDelaySeconds: 60
+    periodSeconds: 10
+
+# ----------------------------------------------------------------------------
+# SECURITY
+# ----------------------------------------------------------------------------
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+# ----------------------------------------------------------------------------
+# RESOURCE MANAGEMENT
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 1.5Gi
+
+# DATABASE CONFIGURATION
+# MySQL RDS Database Endpoint and credentials will be injected via ConfigMap and Secrets
+# --------------------------------------------------------
+rds:
+  hostname: ""
+  port: 3306
+  serviceName: mysql
+
+# ----------------------------------------------------------------------------
+# AWS SECRETS MANAGER / CSI DRIVER
+# ----------------------------------------------------------------------------
+secrets:
+  secretProviderClass: usermgmt-db-secrets
+  awsSecretName: mysql-db-secret-1
+  k8sSecretName: usermgmt-db
+
+# ----------------------------------------------------------------------------
+# CONFIGMAP
+# ----------------------------------------------------------------------------
+config:
+  dbHostname: mysql
+  dbPort: "3306"
+  dbName: usermgmt
+  springProfile: mysqlaws
+  logLevel: INFO
+
+# ----------------------------------------------------------------------------
+# AUTOSCALING - HORIZONTAL POD AUTOSCALER (HPA)
+# ----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------
+# POD DISRUPTION BUDGET (PDB)
+# Prevents voluntary disruptions from taking down too many
+# replicas during node upgrades, Karpenter consolidation,
+# or node maintenance.
+# ---------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+
+  # Keep at least two replicas available
+  minAvailable: 2
+
+# ----------------------------------------------------------------------------
+# KARPENTER NODE SELECTION
+# ----------------------------------------------------------------------------
+# Schedule pods on Karpenter On-Demand nodes for stability
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# ----------------------------------------------------------------------------
+# PROMETHEUS SCRAPING
+# ----------------------------------------------------------------------------
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8095"
+  prometheus.io/path: "/actuator/prometheus"
+
+
+# ----------------------------------------------------------------------------
+# OPENTELEMETRY INSTRUMENTATION
+# ----------------------------------------------------------------------------
+opentelemetry:
+  enabled: true
+  instrumentation: ""
+
+# ----------------------------------------------------------------------------
+# TOPOLOGY SPREAD CONSTRAINTS
+# ----------------------------------------------------------------------------
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: usermgmt
+        app.kubernetes.io/instance: usermgmt
+
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: usermgmt
+        app.kubernetes.io/instance: usermgmt

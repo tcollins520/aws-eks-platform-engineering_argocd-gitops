@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "notification.fullname" . }}
+  labels:
+    {{- include "notification.labels" . | nindent 4 }}
+
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+
+  selector:
+    matchLabels:
+      {{- include "notification.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      {{- if .Values.podAnnotations }}
+      annotations:
+        {{- include "notification.podAnnotations" . | nindent 8 }}
+        {{- if and .Values.opentelemetry.enabled .Values.opentelemetry.instrumentation }}
+        instrumentation.opentelemetry.io/inject-sdk: {{ .Values.opentelemetry.instrumentation }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "notification.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "notification.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 30
+
+    {{- with .Values.podSecurityContext }}
+          securityContext:
+    {{ toYaml . | nindent 8 }}
+    {{- end }}
+      
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+      containers:
+        - name: {{ include "notification.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            - name: AWS_MAIL_SERVER_HOST
+              value: {{ .Values.config.smtpHost | quote }}
+
+            - name: AWS_MAIL_SERVER_FROM_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.k8sSecretName }}
+                  key: SMTP_FROM
+
+            - name: AWS_MAIL_SERVER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.k8sSecretName }}
+                  key: SMTP_USERNAME
+
+            - name: AWS_MAIL_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.k8sSecretName }}
+                  key: SMTP_PASSWORD
+
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+
+          startupProbe:
+            tcpSocket:
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+
+
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-volume
+
+            - name: aws-secrets
+              mountPath: /mnt/secrets-store
+              readOnly: true
+
+      volumes:
+        - name: tmp-volume
+          emptyDir:
+            medium: Memory
+
+        - name: aws-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+
+            volumeAttributes:
+              secretProviderClass: "{{ .Values.secrets.secretProviderClass }}"

@@ -1,0 +1,129 @@
+replicaCount: 2
+
+image:
+  repository: stacksimplify/kube-notifications-microservice
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: notification
+
+service:
+  type: ClusterIP
+  port: 8096
+  targetPort: 8096
+
+# ----------------------------------------------------------------------------
+# SECURITY
+# ----------------------------------------------------------------------------
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# ----------------------------------------------------------------------------
+# HEALTH PROBES
+# ----------------------------------------------------------------------------
+probes:
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+
+# ----------------------------------------------------------------------------
+# RESOURCE MANAGEMENT
+# ---------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 1.5Gi
+
+# ----------------------------------------------------------------------------
+# AWS SECRETS MANAGER / CSI DRIVER
+# ----------------------------------------------------------------------------
+secrets:
+  secretProviderClass: notification-email-secrets
+  awsSecretName: notification-email-secret
+  k8sSecretName: notification-email
+
+# ----------------------------------------------------------------------------
+# CONFIGMAP
+# ----------------------------------------------------------------------------
+config:
+  smtpHost: email-smtp.us-east-1.amazonaws.com
+  logLevel: INFO
+
+# ----------------------------------------------------------------------------
+# AUTOSCALING - HORIZONTAL POD AUTOSCALER (HPA)
+# ----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ----------------------------------------------------------------------------
+# POD DISRUPTION BUDGET (PDB) 
+# ----------------------------------------------------------------------------
+# Maintain minimum availability during voluntary disruptions (node drains, etc.)
+podDisruptionBudget:
+  enabled: true # set to true to enable Pod Disruption Budget. If enabled, it will ensure that at least 2 pods are always available during voluntary disruptions (like node drains).
+  # Keep at least two pods available during upgrades
+  minAvailable: 2
+
+# ----------------------------------------------------------------------------
+# KARPENTER NODE SELECTION
+# ----------------------------------------------------------------------------
+# Schedule pods on Karpenter On-Demand nodes for stability
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# ----------------------------------------------------------------------------
+# PROMETHEUS SCRAPING
+# ----------------------------------------------------------------------------
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8096"
+  prometheus.io/path: "/actuator/prometheus"
+
+# ----------------------------------------------------------------------------
+# OPENTELEMETRY INSTRUMENTATION
+# ----------------------------------------------------------------------------
+opentelemetry:
+  enabled: true
+  instrumentation: ""
+
+# ----------------------------------------------------------------------------
+# TOPOLOGY SPREAD CONSTRAINTS
+# ----------------------------------------------------------------------------
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: notification
+        app.kubernetes.io/instance: notification
+
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: notification
+        app.kubernetes.io/instance: notification

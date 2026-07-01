@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "usermgmt.fullname" . }}
+  labels:
+    {{- include "usermgmt.labels" . | nindent 4 }}
+
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+
+  selector:
+    matchLabels:
+      {{- include "usermgmt.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      {{- if .Values.podAnnotations }}
+      annotations:
+        {{- include "usermgmt.podAnnotations" . | nindent 8 }}
+        {{- if and .Values.opentelemetry.enabled .Values.opentelemetry.instrumentation }}
+        instrumentation.opentelemetry.io/inject-sdk: {{ .Values.opentelemetry.instrumentation }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "usermgmt.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "usermgmt.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 30
+
+    {{- with .Values.podSecurityContext }}
+          securityContext:
+    {{ toYaml . | nindent 8 }}
+    {{- end }}
+      
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+      containers:
+        - name: {{ include "usermgmt.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          envFrom:
+            - configMapRef:
+                name: {{ include "usermgmt.configMapName" . }}
+
+            - secretRef:
+                name: {{ .Values.secrets.k8sSecretName }}
+
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+
+            failureThreshold: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-volume
+
+            - name: aws-secrets
+              mountPath: /mnt/secrets-store
+              readOnly: true
+
+      volumes:
+        - name: tmp-volume
+          emptyDir:
+            medium: Memory
+
+        - name: aws-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+
+            volumeAttributes:
+              secretProviderClass: "{{ .Values.secrets.secretProviderClass }}"

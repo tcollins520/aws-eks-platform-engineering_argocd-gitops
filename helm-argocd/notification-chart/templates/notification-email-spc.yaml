@@ -1,0 +1,31 @@
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: {{ .Values.secrets.secretProviderClass }}
+  labels:
+    {{- include "notification.labels" . | nindent 4 }}
+spec:
+  provider: aws
+  parameters:
+    usePodIdentity: "true"
+    objects: |
+      - objectName: "{{ .Values.secrets.awsSecretName }}"
+        objectType: "secretsmanager"
+        jmesPath:
+          - path: "SMTP_USERNAME"
+            objectAlias: "SMTP_USERNAME"
+          - path: "SMTP_PASSWORD"
+            objectAlias: "SMTP_PASSWORD"
+          - path: "SMTP_FROM"
+            objectAlias: "SMTP_FROM"
+
+  secretObjects:
+    - secretName: {{ .Values.secrets.k8sSecretName }}
+      type: Opaque
+      data:
+        - objectName: SMTP_USERNAME
+          key: SMTP_USERNAME
+        - objectName: SMTP_PASSWORD
+          key: SMTP_PASSWORD
+        - objectName: SMTP_FROM
+          key: SMTP_FROM

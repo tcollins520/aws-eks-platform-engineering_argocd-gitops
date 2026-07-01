@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------------
+# Service Configuration
+# -----------------------------------------------------------------------------
+
+service:
+  name: usermgmt
+  port: 8095
+
+# -----------------------------------------------------------------------------
+# Ingress Configuration
+# -----------------------------------------------------------------------------
+
+ingress:
+  enabled: true
+
+  className: "alb"
+
+  host: "usermgmt.tinacloud.dev"
+
+  path: "/"
+
+  pathType: "Prefix"
+
+  loadBalancerName: "usermgmt-alb-https"
+
+  scheme: "internet-facing"
+
+  targetType: "ip"
+
+  certificateArn: "arn:aws:acm:us-east-1:162663626265:certificate/a4eb55e2-32e6-4241-8775-262a19640c13"
+
+  sslRedirect: "443"
+
+  healthcheck:
+
+    path: "/usermgmt/health-status"
+
+    protocol: "HTTP"
+
+    port: "traffic-port"
+
+    interval: 15
+
+    timeout: 5
+
+    healthyThreshold: 2
+
+    unhealthyThreshold: 2
+
+    successCodes: "200"

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "notification.configMapName" . }}
+  labels:
+{{ include "notification.labels" . | indent 4 }}
+
+data:
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  AWS_MAIL_SERVER_HOST: {{ .Values.config.smtpHost | quote }}
