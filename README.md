@@ -103,27 +103,51 @@ aws-eks-platform-engineering_argocd/
 ---
 
 ## GitOps Workflow
+```
 
-Developer
-      │
-      ▼
-Git Push
-      │
-      ▼
-GitHub Repository
-      │
-      ▼
-Argo CD detects change
-      │
-      ▼
-Sync
-      │
-      ▼
-Amazon EKS
-      │
-      ▼
-Application Updated
-
+                    Developer
+                         │
+                git push main
+                         │
+                         ▼
+        aws-eks-platform-engineering
+                         │
+                         ▼
+                 GitHub Actions
+                         │
+     ┌───────────────────┼────────────────────┐
+     │                   │                    │
+     ▼                   ▼                    ▼
+ Lint & Test      Security Scan        Build Docker
+     │                   │                    │
+     └───────────────────┼────────────────────┘
+                         │
+                         ▼
+                 Push Image to ECR
+                         │
+                         ▼
+       Update GitOps Repository (Helm values)
+                         │
+                         ▼
+      aws-eks-platform-engineering_argocd
+                         │
+                         ▼
+                    Git Commit
+                         │
+                         ▼
+                      Argo CD
+                         │
+                Automatic Sync
+                         │
+                         ▼
+                    Amazon EKS
+                         │
+                         ▼
+              Rolling / Canary Deployment
+                         │
+                         ▼
+            ADOT → AMP → AMG Monitoring
+```
 ---
 
 ## Applications
