@@ -13,7 +13,7 @@ Application source code is maintained separately.
 ---
 
 ## Architecture
-
+```
 GitHub
         │
         ▼
@@ -24,7 +24,7 @@ Amazon EKS
         │
         ▼
 Kubernetes Resources
-
+```
 ---
 
 ## Repository Structure
