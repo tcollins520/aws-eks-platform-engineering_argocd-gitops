@@ -210,4 +210,4 @@ This repository will also contain:
 
 AWS Platform Engineering Portfolio
 
-Terraform • Kubernetes • Helm • Argo CD • GitOps • Karpenter • OpenTelemetry • Amazon Managed Prometheus • Amazon Managed Grafana
+Terraform • Kubernetes • Helm • Argo CD • GitOps • Karpenter • HPA • OpenTelemetry • Amazon Managed Prometheus • Amazon Managed Grafana
