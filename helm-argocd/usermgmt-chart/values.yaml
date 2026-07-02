@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: stacksimplify/kube-usermanagement-microservice
-  tag: "1.0.0"
+  repository: 162663626265.dkr.ecr.us-east-1.amazonaws.com/usermgmt_img
+  tag: sha-bf4eae0
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -55,7 +55,7 @@ resources:
 # MySQL RDS Database Endpoint and credentials will be injected via ConfigMap and Secrets
 # --------------------------------------------------------
 rds:
-  hostname: ""
+  hostname: mydb101.cifguuuaskpf.us-east-1.rds.amazonaws.com
   port: 3306
   serviceName: mysql
 
