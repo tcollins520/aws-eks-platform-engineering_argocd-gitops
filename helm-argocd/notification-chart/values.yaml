@@ -99,7 +99,10 @@ affinity: {}
 # ----------------------------------------------------------------------------
 # PROMETHEUS SCRAPING
 # ----------------------------------------------------------------------------
-podAnnotations: {}
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8095"
+  prometheus.io/path: "/actuator/prometheus"
 
 # ----------------------------------------------------------------------------
 # OPENTELEMETRY INSTRUMENTATION
