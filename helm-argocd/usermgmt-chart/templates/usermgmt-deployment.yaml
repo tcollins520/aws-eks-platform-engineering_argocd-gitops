@@ -117,7 +117,7 @@ spec:
             - name: nginx-run
               mountPath: /var/run
 
-             - name: nginx-log
+            - name: nginx-log
               mountPath: /var/log/nginx
 
             - name: aws-secrets
