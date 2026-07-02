@@ -11,22 +11,22 @@ serviceAccount:
 
 service:
   type: ClusterIP
-  port: 8095
-  targetPort: 8095
+  port: 80
+  targetPort: 80
 # ----------------------------------------------------------------------------
 # HEALTH PROBES
 # ----------------------------------------------------------------------------
 probes:
   readiness:
-    path: /usermgmt/health-status
-    port: 8095
-    initialDelaySeconds: 30
+    path: /
+    port: 80
+    initialDelaySeconds: 5
     periodSeconds: 10
 
   liveness:
-    path: /usermgmt/health-status
-    port: 8095
-    initialDelaySeconds: 60
+    path: /
+    port: 80
+    initialDelaySeconds: 10
     periodSeconds: 10
 
 # ----------------------------------------------------------------------------
