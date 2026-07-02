@@ -19,12 +19,15 @@ service:
 # ----------------------------------------------------------------------------
 containerSecurityContext:
   runAsNonRoot: true
-  runAsUser: 1000
+  runAsUser: 101
+  runAsGroup: 101
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
   capabilities:
     drop:
       - ALL
+  seccompProfile:
+    type: RuntimeDefault
 
 # ----------------------------------------------------------------------------
 # HEALTH PROBES

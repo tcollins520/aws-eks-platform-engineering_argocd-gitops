@@ -121,6 +121,15 @@ spec:
             - mountPath: /tmp
               name: tmp-volume
 
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+
+            - name: nginx-run
+              mountPath: /var/run
+
+            - name: nginx-log
+              mountPath: /var/log/nginx
+
             - name: aws-secrets
               mountPath: /mnt/secrets-store
               readOnly: true
@@ -129,6 +138,15 @@ spec:
         - name: tmp-volume
           emptyDir:
             medium: Memory
+
+        - name: nginx-cache
+          emptyDir: {}
+
+        - name: nginx-run
+          emptyDir: {}
+        
+        - name: nginx-log
+          emptyDir: {}
 
         - name: aws-secrets
           csi:
