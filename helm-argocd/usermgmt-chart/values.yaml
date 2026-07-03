@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: 162663626265.dkr.ecr.us-east-1.amazonaws.com/usermgmt_img
-  tag: sha-7e38155
+  tag: sha-af97594
   pullPolicy: IfNotPresent
 
 serviceAccount:
