@@ -12,17 +12,25 @@ spec:
 
   strategy:
     canary:
+      stableService: {{ .Values.rollout.stableService }}
+      canaryService: {{ .Values.rollout.canaryService }}
+
+      trafficRouting:
+        alb:
+          ingress: ingress-common
+          rootService: usermgmt-root
+
       maxSurge: 25%
       maxUnavailable: 0
 
       steps:
-         - setWeight: 25
-         - pause: {}
+        - setWeight: 25
+        - pause: {}
 
-         - setWeight: 50
-         - pause: {}
+        - setWeight: 50
+        - pause: {}
 
-         - setWeight: 100
+        - setWeight: 100
 
 
   selector:

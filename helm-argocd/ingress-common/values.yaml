@@ -5,9 +5,11 @@
 service:
   name: usermgmt-stable
   port: 80
-  
+
 rollout:
+  rootService: usermgmt-root
   stableService: usermgmt-stable
+  canaryService: usermgmt-canary
 
 # -----------------------------------------------------------------------------
 # Ingress Configuration

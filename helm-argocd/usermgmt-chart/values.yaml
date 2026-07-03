@@ -19,6 +19,7 @@ service:
 rollout:
   stableService: usermgmt-stable
   canaryService: usermgmt-canary
+  rootService: usermgmt-root
 # ------------------------------------------------------------------------------
 # HEALTH PROBES
 # ------------------------------------------------------------------------------

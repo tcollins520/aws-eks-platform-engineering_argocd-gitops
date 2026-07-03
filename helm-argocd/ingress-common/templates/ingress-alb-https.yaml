@@ -62,10 +62,9 @@ spec:
 
               service:
 
-                name: {{ .Values.rollout.stableService }}
+                name: {{ .Values.rollout.rootService }}
 
                 port:
-
-                  number: {{ .Values.service.port }}
+                  name: use-annotation
 
 {{- end }}
