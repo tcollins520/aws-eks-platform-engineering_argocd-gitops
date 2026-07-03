@@ -18,7 +18,8 @@ spec:
       trafficRouting:
         alb:
           ingress: ingress-common
-          rootService: usermgmt-root
+          rootService: {{ .Values.rollout.rootService }}
+          servicePort: {{ .Values.service.port }}
 
       maxSurge: 25%
       maxUnavailable: 0
