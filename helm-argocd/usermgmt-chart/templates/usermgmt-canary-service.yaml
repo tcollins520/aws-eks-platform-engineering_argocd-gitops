@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "usermgmt.fullname" . }}
+  name: {{ .Values.rollout.canaryService }}
   labels:
     {{ include "usermgmt.labels" . | nindent 4 }}
 
