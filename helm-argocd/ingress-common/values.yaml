@@ -3,8 +3,11 @@
 # -----------------------------------------------------------------------------
 
 service:
-  name: usermgmt
-  port: 8095
+  name: usermgmt-stable
+  port: 80
+  
+rollout:
+  stableService: usermgmt-stable
 
 # -----------------------------------------------------------------------------
 # Ingress Configuration

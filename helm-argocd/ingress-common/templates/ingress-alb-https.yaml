@@ -62,7 +62,7 @@ spec:
 
               service:
 
-                name: {{ .Values.service.name }}
+                name: {{ .Values.rollout.stableService }}
 
                 port:
 
