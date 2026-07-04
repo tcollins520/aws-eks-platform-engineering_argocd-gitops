@@ -11,27 +11,16 @@ spec:
 {{- end }}
 
   strategy:
-    canary:
-      stableService: {{ .Values.rollout.stableService }}
-      canaryService: {{ .Values.rollout.canaryService }}
+    blueGreen:
 
-      trafficRouting:
-        alb:
-          ingress: ingress-common
-          rootService: {{ .Values.rollout.rootService }}
-          servicePort: {{ .Values.service.port }}
+      activeService: usermgmt-stable
 
-      maxSurge: 25%
-      maxUnavailable: 0
+      previewService: usermgmt-preview
 
-      steps:
-        - setWeight: 25
-        - pause: {}
+      autoPromotionEnabled: false
 
-        - setWeight: 50
-        - pause: {}
-
-        - setWeight: 100
+      previewReplicaCount: 1
+      
 
 
   selector:
