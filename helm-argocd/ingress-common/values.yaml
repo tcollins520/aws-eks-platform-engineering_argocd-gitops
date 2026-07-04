@@ -38,7 +38,7 @@ ingress:
 
   healthcheck:
 
-    path: "/usermgmt/health-status"
+    path: "/"
 
     protocol: "HTTP"
 
