@@ -9,7 +9,7 @@ service:
 rollout:
   rootService: usermgmt-root
   stableService: usermgmt-stable
-  canaryService: usermgmt-canary
+  previewService: usermgmt-preview
 
 # -----------------------------------------------------------------------------
 # Ingress Configuration
