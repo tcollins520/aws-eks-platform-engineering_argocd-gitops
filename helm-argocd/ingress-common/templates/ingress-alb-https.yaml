@@ -65,6 +65,6 @@ spec:
                 name: {{ .Values.rollout.rootService }}
 
                 port:
-                  name: use-annotation
+                  number: 80
 
 {{- end }}
